@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка браузеров</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+        .tab-content {
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+        .status-update {
+            color: red;
+            font-weight: bold;
+        }
+        .progress {
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .badge {
+            margin-left: 5px;
+        }
+        .system-info {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        #urlHistory {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Проверка браузеров и система</h1>
+
+        <ul class="nav nav-tabs" id="mainTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="browsers-tab" data-bs-toggle="tab" data-bs-target="#browsers" type="button" role="tab" aria-controls="browsers" aria-selected="true">Браузеры</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab" aria-controls="system" aria-selected="false">Сканирование системы</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="url-tab" data-bs-toggle="tab" data-bs-target="#url" type="button" role="tab" aria-controls="url" aria-selected="false">Открытие URL</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="mainTabContent">
+            <!-- Вкладка браузеров -->
+            <div class="tab-pane fade show active" id="browsers" role="tabpanel" aria-labelledby="browsers-tab">
+                <div class="mb-3">
+                    <button id="checkBrowsersBtn" class="btn btn-primary">Проверить версии браузеров</button>
+                    <button id="toggleAutostartBtn" class="btn btn-secondary ms-2">Включить/Выключить автозапуск</button>
+                    <span id="autostartStatus" class="ms-2 badge rounded-pill"></span>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5>Google Chrome</h5>
+                    </div>
+                    <div class="card-body" id="chromeResult">
+                        <p>Нажмите кнопку "Проверить версии браузеров" для получения информации.</p>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5>Opera</h5>
+                    </div>
+                    <div class="card-body" id="operaResult">
+                        <p>Нажмите кнопку "Проверить версии браузеров" для получения информации.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Microsoft Edge</h5>
+                    </div>
+                    <div class="card-body" id="edgeResult">
+                        <p>Нажмите кнопку "Проверить версии браузеров" для получения информации.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка сканирования системы -->
+            <div class="tab-pane fade" id="system" role="tabpanel" aria-labelledby="system-tab">
+                <button id="scanSystemBtn" class="btn btn-primary mb-3">Сканировать систему</button>
+
+                <div class="progress mb-4" style="display: none;" id="scanProgress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                </div>
+
+                <div class="system-info" id="systemResult">
+                    <p>Нажмите кнопку "Сканировать систему" для получения информации.</p>
+                </div>
+            </div>
+
+            <!-- Вкладка открытия URL -->
+            <div class="tab-pane fade" id="url" role="tabpanel" aria-labelledby="url-tab">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="urlInput" placeholder="https://example.com" value="https://">
+                    <button class="btn btn-primary" id="openUrlBtn">Открыть URL</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5>История</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="urlHistory" class="list-group">
+                            <!-- История URL будет отображаться здесь -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Логирование запуска приложения
+            fetch('/log_startup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Проверка автозапуска при старте
+            checkAutostart();
+
+            // Обработчики событий для кнопок
+            document.getElementById('checkBrowsersBtn').addEventListener('click', checkBrowsers);
+            document.getElementById('toggleAutostartBtn').addEventListener('click', toggleAutostart);
+            document.getElementById('scanSystemBtn').addEventListener('click', scanSystem);
+            document.getElementById('openUrlBtn').addEventListener('click', openUrl);
+
+            // Загрузка истории URL
+            loadUrlHistory();
+        });
+
+        // Функция проверки статуса автозапуска
+        function checkAutostart() {
+            fetch('/check_autostart')
+                .then(response => response.json())
+                .then(data => {
+                    const statusBadge = document.getElementById('autostartStatus');
+                    if (data.enabled) {
+                        statusBadge.textContent = 'Автозапуск включен';
+                        statusBadge.classList.add('bg-success');
+                        statusBadge.classList.remove('bg-secondary');
+                    } else {
+                        statusBadge.textContent = 'Автозапуск выключен';
+                        statusBadge.classList.add('bg-secondary');
+                        statusBadge.classList.remove('bg-success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при проверке автозапуска:', error);
+                });
+        }
+
+        // Функция включения/выключения автозапуска
+        function toggleAutostart() {
+            fetch('/toggle_autostart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        checkAutostart(); // Обновляем статус
+                    } else {
+                        alert('Ошибка: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при изменении автозапуска:', error);
+                    alert('Ошибка при изменении автозапуска: ' + error);
+                });
+        }
+
+        // Функция проверки версий браузеров
+        function checkBrowsers() {
+            document.getElementById('chromeResult').innerHTML = '<p>Загрузка информации...</p>';
+            document.getElementById('operaResult').innerHTML = '<p>Загрузка информации...</p>';
+            document.getElementById('edgeResult').innerHTML = '<p>Загрузка информации...</p>';
+
+            fetch('/check_browsers')
+                .then(response => response.json())
+                .then(data => {
+                    // Chrome
+                    const chromeResult = document.getElementById('chromeResult');
+                    if (data.chrome.installed) {
+                        let chromeStatus = data.chrome.needs_update ? 
+                            '<span class="status-update">Доступно обновление!</span>' : 
+                            '<span class="status-ok">Установлена последняя версия</span>';
+
+                        chromeResult.innerHTML = `
+                            <p><strong>Текущая версия:</strong> ${data.chrome.current_version}</p>
+                            <p><strong>Последняя версия:</strong> ${data.chrome.latest_version}</p>
+                            <p><strong>Статус:</strong> ${chromeStatus}</p>
+                        `;
+                    } else {
+                        chromeResult.innerHTML = '<p>Google Chrome не установлен</p>';
+                    }
+
+                    // Opera
+                    const operaResult = document.getElementById('operaResult');
+                    if (data.opera.installed) {
+                        let operaStatus = data.opera.needs_update ? 
+                            '<span class="status-update">Доступно обновление!</span>' : 
+                            '<span class="status-ok">Установлена последняя версия</span>';
+
+                        operaResult.innerHTML = `
+                            <p><strong>Текущая версия:</strong> ${data.opera.current_version}</p>
+                            <p><strong>Последняя версия:</strong> ${data.opera.latest_version}</p>
+                            <p><strong>Статус:</strong> ${operaStatus}</p>
+                        `;
+                    } else {
+                        operaResult.innerHTML = '<p>Opera не установлена</p>';
+                    }
+
+                    // Edge
+                    const edgeResult = document.getElementById('edgeResult');
+                    if (data.edge.installed) {
+                        let edgeStatus = data.edge.needs_update ? 
+                            '<span class="status-update">Доступно обновление!</span>' : 
+                            '<span class="status-ok">Установлена последняя версия</span>';
+
+                        edgeResult.innerHTML = `
+                            <p><strong>Текущая версия:</strong> ${data.edge.current_version}</p>
+                            <p><strong>Последняя версия:</strong> ${data.edge.latest_version}</p>
+                            <p><strong>Статус:</strong> ${edgeStatus}</p>
+                        `;
+                    } else {
+                        edgeResult.innerHTML = '<p>Microsoft Edge не установлен</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при проверке браузеров:', error);
+                    document.getElementById('chromeResult').innerHTML = '<p>Ошибка при получении информации</p>';
+                    document.getElementById('operaResult').innerHTML = '<p>Ошибка при получении информации</p>';
+                    document.getElementById('edgeResult').innerHTML = '<p>Ошибка при получении информации</p>';
+                });
+        }
+
+        // Функция сканирования системы
+        function scanSystem() {
+            const systemResult = document.getElementById('systemResult');
+            const progressBar = document.getElementById('scanProgress');
+
+            systemResult.innerHTML = '<p>Выполняется сканирование...</p>';
+            progressBar.style.display = 'block';
+
+            fetch('/scan_system')
+                .then(response => response.json())
+                .then(data => {
+                    progressBar.style.display = 'none';
+
+                    if (data.error) {
+                        systemResult.innerHTML = `<p>Ошибка при сканировании: ${data.error}</p>`;
+                        return;
+                    }
+
+                    let result = '<h4>Информация о системе</h4>';
+                    result += `<p><strong>Операционная система:</strong> ${data.os.system} ${data.os.release}</p>`;
+                    result += `<p><strong>Версия:</strong> ${data.os.version}</p>`;
+                    result += `<p><strong>Архитектура:</strong> ${data.os.architecture}</p>`;
+                    result += `<p><strong>Процессор:</strong> ${data.os.processor}</p>`;
+
+                    if (data.memory) {
+                        result += `<p><strong>Оперативная память:</strong> ${data.memory}</p>`;
+                    }
+
+                    if (data.processes && data.processes.length > 0) {
+                        result += '<h4>Запущенные процессы</h4>';
+                        result += '<pre class="bg-light p-2">';
+                        result += data.processes.join('\n');
+                        result += '</pre>';
+                    }
+
+                    if (data.drives && data.drives.length > 0) {
+                        result += '<h4>Информация о дисках</h4>';
+                        result += '<pre class="bg-light p-2">';
+                        result += data.drives.join('\n');
+                        result += '</pre>';
+                    }
+
+                    systemResult.innerHTML = result;
+                })
+                .catch(error => {
+                    console.error('Ошибка при сканировании системы:', error);
+                    progressBar.style.display = 'none';
+                    systemResult.innerHTML = '<p>Ошибка при сканировании системы</p>';
+                });
+        }
+        
+        // Функция открытия URL
+        function openUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('Введите URL для открытия');
+                return;
+            }
+            
+            fetch('/open_url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: url })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Обновляем историю URL после успешного открытия
+                        loadUrlHistory();
+                    } else {
+                        alert('Ошибка при открытии URL: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при открытии URL:', error);
+                    alert('Ошибка при открытии URL: ' + error);
+                });
+        }
+        
+        // Функция загрузки истории URL
+        function loadUrlHistory() {
+            fetch('/get_url_history')
+                .then(response => response.json())
+                .then(data => {
+                    const historyContainer = document.getElementById('urlHistory');
+                    historyContainer.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        historyContainer.innerHTML = '<p class="text-muted">История пуста</p>';
+                        return;
+                    }
+                    
+                    // Отображаем историю в обратном порядке (новые сверху)
+                    data.reverse().forEach(item => {
+                        const historyItem = document.createElement('a');
+                        historyItem.href = '#';
+                        historyItem.className = 'list-group-item list-group-item-action';
+                        historyItem.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${item.url}</h6>
+                                <small>${item.timestamp}</small>
+                            </div>
+                        `;
+                        
+                        // Клик по элементу истории заполняет поле ввода
+                        historyItem.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            document.getElementById('urlInput').value = item.url;
+                        });
+                        
+                        historyContainer.appendChild(historyItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке истории URL:', error);
+                    document.getElementById('urlHistory').innerHTML = '<p>Ошибка при загрузке истории</p>';
+                });
+        }
+    </script>
+</body>
+</html>

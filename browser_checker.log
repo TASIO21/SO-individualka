@@ -1,0 +1,19 @@
+2025-05-11 14:55:54,039 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-05-11 14:55:54,039 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-11 14:56:42,103 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-05-11 14:56:42,103 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-11 14:56:57,183 - INFO - Start
+2025-05-11 14:56:57,217 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-05-11 14:56:57,236 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-11 14:57:15,360 - INFO - 127.0.0.1 - - [11/May/2025 14:57:15] "GET / HTTP/1.1" 200 -
+2025-05-11 14:57:15,740 - INFO - 127.0.0.1 - - [11/May/2025 14:57:15] "POST /log_startup HTTP/1.1" 200 -
+2025-05-11 14:57:15,946 - INFO - 127.0.0.1 - - [11/May/2025 14:57:15] "GET /get_url_history HTTP/1.1" 200 -
+2025-05-11 14:57:15,948 - INFO - 127.0.0.1 - - [11/May/2025 14:57:15] "GET /check_autostart HTTP/1.1" 200 -
+2025-05-11 14:57:16,165 - INFO - 127.0.0.1 - - [11/May/2025 14:57:16] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-05-11 14:57:32,823 - INFO - 127.0.0.1 - - [11/May/2025 14:57:32] "GET /check_browsers HTTP/1.1" 200 -
+2025-05-11 14:57:46,115 - INFO - 127.0.0.1 - - [11/May/2025 14:57:46] "GET /scan_system HTTP/1.1" 200 -
+2025-05-11 14:57:53,194 - INFO - 127.0.0.1 - - [11/May/2025 14:57:53] "POST /toggle_autostart HTTP/1.1" 200 -
+2025-05-11 14:57:55,960 - INFO - 127.0.0.1 - - [11/May/2025 14:57:55] "GET /check_autostart HTTP/1.1" 200 -
